@@ -13,6 +13,9 @@ def options(opt):
 def configure(conf):
 	conf.env.append_unique('DEFINES',[
 		'RW_GL3',
+		'LIBRW_SDL2',
+		'RW_OPENGL',
+		'USE_SDL2',
 	])
 
 def build(bld):
@@ -86,7 +89,7 @@ def build(bld):
 
 	defines = []
 
-	libs = []
+	libs = ['SDL2']
 
 	bld.stlib(
 		source   = source,

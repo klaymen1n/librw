@@ -1582,7 +1582,7 @@ startSDL2(void)
 	}
 
 	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
-
+	
 	glGlobals.window = win;
 	glGlobals.glcontext = ctx;
 	*glGlobals.pWindow = win;
@@ -1940,8 +1940,28 @@ deviceSystemSDL2(DeviceReq req, void *arg, int32 n)
 	case DEVICEFINALIZE:
 		return finalizeOpenGL();
 
-	// TODO: implement subsystems
+	case DEVICEGETNUMSUBSYSTEMS:
+		return 1;
 
+	case DEVICEGETCURRENTSUBSYSTEM:
+		return 1;
+		
+		
+	case DEVICESETSUBSYSTEM:
+		//monitors = glfwGetMonitors(&glGlobals.numMonitors);
+		//if(n >= glGlobals.numMonitors)
+			//return 0;
+		//glGlobals.currentMonitor = n;
+		//glGlobals.monitor = monitors[glGlobals.currentMonitor];
+		return 1;
+
+	case DEVICEGETSUBSSYSTEMINFO:
+//		monitors = glfwGetMonitors(&glGlobals.numMonitors);
+//		if(n >= glGlobals.numMonitors)
+//			return 0;
+//		strncpy(((SubSystemInfo*)arg)->name, glfwGetMonitorName(monitors[n]), sizeof(SubSystemInfo::name));
+		return 1;
+		 
 	case DEVICEGETNUMVIDEOMODES:
 		return glGlobals.numModes;
 
