@@ -301,12 +301,15 @@ decompressDXT5(uint8 *adst, int32 w, int32 h, uint8 *src)
 			indices >>= 2;
 		}
 		// only 6 indices
+#ifdef ANDROID
+		uint32 alphas = *((uint32*)&src[j+2]);
+#else
 		uint64 alphas = *((uint64*)&src[j+2]);
+#endif		
 		for(int32 k = 0; k < 16; k++){
 			aidx[k] = alphas & 0x7;
 			alphas >>= 3;
 		}
-
 		/* write bytes */
 		for(uint32 l = 0; l < 4; l++)
 			for(uint32 k = 0; k < 4; k++){
