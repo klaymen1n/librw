@@ -1,3 +1,5 @@
+#include <cstdio>
+#include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -1512,6 +1514,10 @@ openSDL2(EngineOpenParams *openparams)
 		RWERROR((ERR_GENERAL, SDL_GetError()));
 		return 0;
 	}
+	if(SDL_InitSubSystem( SDL_INIT_GAMECONTROLLER ))
+	{
+		printf("Failed to initialize SDL GameController API: %s\n", SDL_GetError());
+	}
 
 	makeVideoModeList(0);
 
@@ -1548,7 +1554,7 @@ startSDL2(void)
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, glGlobals.numSamples);
 
 	int i;
-	for(i = 0; profiles[i].gl; i++){
+	for(i = 3; profiles[i].gl; i++){
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profiles[i].gl);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, profiles[i].major);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, profiles[i].minor);
@@ -1580,9 +1586,51 @@ startSDL2(void)
 		SDL_DestroyWindow(win);
 		return 0;
 	}
-
+#ifndef _ANDROID
 	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
-	
+#else
+	const char *logPath = "/storage/emulated/0/revc/GL_log.txt"; //This is terrible, i know
+	FILE* log = fopen(logPath, "w");
+	    const char *version     = (const char *)glGetString(GL_VERSION);
+    const char *vendor      = (const char *)glGetString(GL_VENDOR);
+    const char *renderer    = (const char *)glGetString(GL_RENDERER);
+    const char *extensions  = (const char *)glGetString(GL_EXTENSIONS);
+    const char *shadingLang = (const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
+
+    fprintf(log, "== OpenGL ES Info ==\n");
+    fprintf(log, "GL_VERSION: %s\n", version     ? version     : "N/A");
+    fprintf(log, "GL_VENDOR: %s\n", vendor       ? vendor      : "N/A");
+    fprintf(log, "GL_RENDERER: %s\n", renderer   ? renderer    : "N/A");
+    fprintf(log, "GL_SHADING_LANGUAGE_VERSION: %s\n", shadingLang ? shadingLang : "N/A");
+    fprintf(log, "\n== Supported Extensions ==\n");
+
+    if (extensions) {
+        char *extCopy = strdup(extensions);
+        char *token = strtok(extCopy, " ");
+        while (token) {
+            fprintf(log, "%s\n", token);
+            token = strtok(NULL, " ");
+        }
+        free(extCopy);
+    } else {
+        fprintf(log, "No extension info available.\n");
+    }
+
+    fprintf(log, "\n== Numeric GL Limits (if supported) ==\n");
+
+    GLint maxVertexAttribs, maxVertexUniforms, maxFragmentUniforms, maxTextureSize;
+    glGetIntegerv(GL_MAX_VERTEX_ATTRIBS, &maxVertexAttribs);
+    glGetIntegerv(GL_MAX_VERTEX_UNIFORM_VECTORS, &maxVertexUniforms);
+    glGetIntegerv(GL_MAX_FRAGMENT_UNIFORM_VECTORS, &maxFragmentUniforms);
+    glGetIntegerv(GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+
+    fprintf(log, "GL_MAX_VERTEX_ATTRIBS: %d\n", maxVertexAttribs);
+    fprintf(log, "GL_MAX_VERTEX_UNIFORM_VECTORS: %d\n", maxVertexUniforms);
+    fprintf(log, "GL_MAX_FRAGMENT_UNIFORM_VECTORS: %d\n", maxFragmentUniforms);
+    fprintf(log, "GL_MAX_TEXTURE_SIZE: %d\n", maxTextureSize);
+
+    fclose(log);
+#endif	
 	glGlobals.window = win;
 	glGlobals.glcontext = ctx;
 	*glGlobals.pWindow = win;

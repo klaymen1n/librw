@@ -427,8 +427,8 @@ d3d_to_gl3(rw::Raster *ras)
 #ifdef RW_GL3
 	using namespace rw;
 
-	if(!gl3::gl3Caps.dxtSupported)
-		return nil;
+	//if(!gl3::gl3Caps.dxtSupported)
+	return nil;
 
 	int dxt = 0;
 	d3d::D3dRaster *d3dras = GETD3DRASTEREXT(ras);
@@ -540,16 +540,16 @@ Raster::convertTexToCurrentPlatform(rw::Raster *ras)
 	newras->setFromImage(img);
 	img->destroy();
 	int numLevels = ras->getNumLevels();
-	for(int i = 1; i < numLevels; i++){
-		ras->lock(i, Raster::LOCKREAD);
-		img = ras->toImage();
-		// TODO: maybe don't *always* do this?
-		img->unpalettize();
-		newras->lock(i, Raster::LOCKWRITE|Raster::LOCKNOFETCH);
-		newras->setFromImage(img);
-		newras->unlock(i);
-		ras->unlock(i);
-	}
+	 for(int i = 1; i < numLevels; i++){
+	 	ras->lock(i, Raster::LOCKREAD);
+	 	img = ras->toImage();
+	 	// TODO: maybe don't *always* do this?
+	 	img->unpalettize();
+	 	newras->lock(i, Raster::LOCKWRITE|Raster::LOCKNOFETCH);
+	 	newras->setFromImage(img);
+	 	newras->unlock(i);
+	 	ras->unlock(i);
+	 }
 	ras->destroy();
 	ras = newras;
 	return ras;
