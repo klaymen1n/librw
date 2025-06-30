@@ -12,6 +12,7 @@
 #include "../rwengine.h"
 #include "../rwpipeline.h"
 #include "../rwobjects.h"
+#include "SDL_system.h"
 #ifdef RW_OPENGL
 
 #include "rwgl3.h"
@@ -31,6 +32,8 @@ bool32 needToReadBackTextures;
 
 int32   alphaFunc;
 float32 alphaRef;
+
+bool isAdreno = false;
 
 struct UniformState
 {
@@ -1360,6 +1363,14 @@ beginUpdate(Camera *cam)
 
 	setFrameBuffer(cam);
 
+	if(isAdreno) //it's terrible hack, but...  
+	{
+		glDisable(GL_DEPTH_TEST);
+		glDepthMask(GL_FALSE);
+		glDisable(GL_STENCIL_TEST);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	}
+	
 	setViewport(cam->frameBuffer);
 }
 
@@ -1401,6 +1412,7 @@ clearCamera(Camera *cam, RGBA *col, uint32 mode)
 	if(setScissor)
 		glDisable(GL_SCISSOR_TEST);
 }
+
 
 static void
 showRaster(Raster *raster, uint32 flags)
@@ -1557,17 +1569,16 @@ startSDL2(void)
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, glGlobals.numSamples);
 
 	int i;
-	for(i = 3; profiles[i].gl; i++){
+	for(i = 0; profiles[i].gl; i++){
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, profiles[i].gl);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, profiles[i].major);
 		SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, profiles[i].minor);
-
 		if(mode->flags & VIDEOMODEEXCLUSIVE) {
 			win = SDL_CreateWindow(glGlobals.winTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, mode->mode.w, mode->mode.h, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
 			if (win)
 				SDL_SetWindowDisplayMode(win, &mode->mode);
 		} else {
-			win = SDL_CreateWindow(glGlobals.winTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, glGlobals.winWidth, glGlobals.winHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL);
+			win = SDL_CreateWindow(glGlobals.winTitle, SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, glGlobals.winWidth, glGlobals.winHeight, SDL_WINDOW_RESIZABLE | SDL_WINDOW_OPENGL | SDL_WINDOW_FULLSCREEN);
 			if (win)
 				SDL_SetWindowDisplayMode(win, NULL);
 		}
@@ -1589,17 +1600,24 @@ startSDL2(void)
 		SDL_DestroyWindow(win);
 		return 0;
 	}
+
 #ifndef _ANDROID
 	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
 #else
 	const char *logPath = "/storage/emulated/0/revc/GL_log.txt"; //This is terrible, i know
 	FILE* log = fopen(logPath, "w");
-	    const char *version     = (const char *)glGetString(GL_VERSION);
+	const char *version     = (const char *)glGetString(GL_VERSION);
     const char *vendor      = (const char *)glGetString(GL_VENDOR);
     const char *renderer    = (const char *)glGetString(GL_RENDERER);
     const char *extensions  = (const char *)glGetString(GL_EXTENSIONS);
     const char *shadingLang = (const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
 
+	if (renderer && strstr(renderer, "Adreno") != nullptr) {
+		isAdreno = true;
+	} else if (vendor && strstr(vendor, "Qualcomm") != nullptr) {
+		isAdreno = true;
+	}
+	
     fprintf(log, "== OpenGL ES Info ==\n");
     fprintf(log, "GL_VERSION: %s\n", version     ? version     : "N/A");
     fprintf(log, "GL_VENDOR: %s\n", vendor       ? vendor      : "N/A");
