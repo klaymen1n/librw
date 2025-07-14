@@ -1,3 +1,4 @@
+#include <cstring>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -302,7 +303,8 @@ decompressDXT5(uint8 *adst, int32 w, int32 h, uint8 *src)
 		}
 		// only 6 indices
 #ifdef ANDROID
-		uint32 alphas = *((uint32*)&src[j+2]);
+		uint64_t alphas = 0;
+		memcpy(&alphas, src + j + 2, sizeof(alphas));
 #else
 		uint64 alphas = *((uint64*)&src[j+2]);
 #endif		
