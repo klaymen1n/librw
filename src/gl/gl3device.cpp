@@ -1604,7 +1604,8 @@ startSDL2(void)
 #ifndef _ANDROID
 	printf("OpenGL version: %s\n", glGetString(GL_VERSION));
 #else
-	const char *logPath = "/storage/emulated/0/revc/GL_log.txt"; //This is terrible, i know
+	char logPath[256];
+	sprintf(logPath, "%s/GL_info.txt", getenv("GAMEFILES"));
 	FILE* log = fopen(logPath, "w");
 	const char *version     = (const char *)glGetString(GL_VERSION);
     const char *vendor      = (const char *)glGetString(GL_VENDOR);
