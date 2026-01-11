@@ -123,8 +123,10 @@ decompressDXT1(uint8 *adst, int32 w, int32 h, uint8 *src)
 	uint8 (*dst)[4] = (uint8(*)[4])adst;
 	for(int32 j = 0; j < w*h/2; j += 8){
 		/* calculate colors */
-		uint32 col0 = *((uint16*)&src[j+0]);
-		uint32 col1 = *((uint16*)&src[j+2]);
+		uint32 col0 = 0;
+		memcpy(&col0, src + j, 2);
+		uint32 col1 = 0;
+		memcpy(&col1, src + j + 2, 2);
 		c[0][0] = ((col0>>11) & 0x1F)*0xFF/0x1F;
 		c[0][1] = ((col0>> 5) & 0x3F)*0xFF/0x3F;
 		c[0][2] = ( col0      & 0x1F)*0xFF/0x1F;
@@ -157,7 +159,8 @@ decompressDXT1(uint8 *adst, int32 w, int32 h, uint8 *src)
 		}
 
 		/* make index list */
-		uint32 indices = *((uint32*)&src[j+4]);
+		uint32 indices = 0;
+		memcpy(&indices, src + j + 4, 4);
 		for(int32 k = 0; k < 16; k++){
 			idx[k] = indices & 0x3;
 			indices >>= 2;
@@ -191,8 +194,10 @@ decompressDXT3(uint8 *adst, int32 w, int32 h, uint8 *src)
 	uint8 (*dst)[4] = (uint8(*)[4])adst;
 	for(int32 j = 0; j < w*h; j += 16){
 		/* calculate colors */
-		uint32 col0 = *((uint16*)&src[j+8]);
-		uint32 col1 = *((uint16*)&src[j+10]);
+		uint32 col0 = 0;
+		memcpy(&col0, src + j + 8, 2);
+		uint32 col1 = 0;
+		memcpy(&col1, src + j + 10, 2);
 		c[0][0] = ((col0>>11) & 0x1F)*0xFF/0x1F;
 		c[0][1] = ((col0>> 5) & 0x3F)*0xFF/0x3F;
 		c[0][2] = ( col0      & 0x1F)*0xFF/0x1F;
@@ -210,12 +215,14 @@ decompressDXT3(uint8 *adst, int32 w, int32 h, uint8 *src)
 		c[3][2] = (1*c[0][2] + 2*c[1][2])/3;
 
 		/* make index list */
-		uint32 indices = *((uint32*)&src[j+12]);
+		uint32 indices = 0;
+		memcpy(&indices, src + j + 12, 4);
 		for(int32 k = 0; k < 16; k++){
 			idx[k] = indices & 0x3;
 			indices >>= 2;
 		}
-		uint64 alphas = *((uint64*)&src[j+0]);
+		uint64 alphas = 0;
+		memcpy(&alphas, &src[j], 8);
 		for(int32 k = 0; k < 16; k++){
 			a[k] = (alphas & 0xF)*17;
 			alphas >>= 4;
@@ -250,8 +257,10 @@ decompressDXT5(uint8 *adst, int32 w, int32 h, uint8 *src)
 	uint8 (*dst)[4] = (uint8(*)[4])adst;
 	for(int32 j = 0; j < w*h; j += 16){
 		/* calculate colors */
-		uint32 col0 = *((uint16*)&src[j+8]);
-		uint32 col1 = *((uint16*)&src[j+10]);
+		uint32 col0 = 0;
+		memcpy(&col0, src + j + 8, 2);
+		uint32 col1 = 0;
+		memcpy(&col1, src + j + 10, 2);
 		c[0][0] = ((col0>>11) & 0x1F)*0xFF/0x1F;
 		c[0][1] = ((col0>> 5) & 0x3F)*0xFF/0x3F;
 		c[0][2] = ( col0      & 0x1F)*0xFF/0x1F;
@@ -296,18 +305,15 @@ decompressDXT5(uint8 *adst, int32 w, int32 h, uint8 *src)
 		}
 
 		/* make index list */
-		uint32 indices = *((uint32*)&src[j+12]);
+		uint32 indices = 0;
+		memcpy(&indices, src + j + 12, 4);
 		for(int32 k = 0; k < 16; k++){
 			idx[k] = indices & 0x3;
 			indices >>= 2;
 		}
 		// only 6 indices
-#ifdef ANDROID
 		uint64_t alphas = 0;
-		memcpy(&alphas, src + j + 2, sizeof(alphas));
-#else
-		uint64 alphas = *((uint64*)&src[j+2]);
-#endif		
+		memcpy(&alphas, src + j + 2, 6);
 		for(int32 k = 0; k < 16; k++){
 			aidx[k] = alphas & 0x7;
 			alphas >>= 3;
@@ -398,7 +404,8 @@ flipAlphaBlock5(uint8 *dst, uint8 *src)
 	dst[0] = src[0];
 	dst[1] = src[1];
 	// bits
-	uint64 bits = *(uint64*)&src[2];
+	uint64 bits = 0;
+	memcpy(&bits, src + 2, 6);
 	uint64 flipbits = 0;
 	for(int i = 0; i < 4; i++){
 		flipbits <<= 12;
@@ -416,7 +423,8 @@ flipAlphaBlock5_half(uint8 *dst, uint8 *src)
 	dst[0] = src[0];
 	dst[1] = src[1];
 	// bits
-	uint64 bits = *(uint64*)&src[2];
+	uint64 bits = 0;
+	memcpy(&bits, src + 2, 6);
 	uint64 flipbits = bits & 0xFFFFFF000000;
 	flipbits |= (bits>>12) & 0xFFF;
 	flipbits |= (bits<<12) & 0xFFF000;
