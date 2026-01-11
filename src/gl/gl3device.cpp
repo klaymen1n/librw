@@ -33,8 +33,6 @@ bool32 needToReadBackTextures;
 int32   alphaFunc;
 float32 alphaRef;
 
-bool isAdreno = false;
-
 struct UniformState
 {
 	float32 alphaRefLow;
@@ -1362,15 +1360,6 @@ beginUpdate(Camera *cam)
 	}
 
 	setFrameBuffer(cam);
-
-	if(isAdreno) //it's terrible hack, but...  
-	{
-		glDisable(GL_DEPTH_TEST);
-		glDepthMask(GL_FALSE);
-		glDisable(GL_STENCIL_TEST);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	}
-	
 	setViewport(cam->frameBuffer);
 }
 
@@ -1612,12 +1601,6 @@ startSDL2(void)
     const char *renderer    = (const char *)glGetString(GL_RENDERER);
     const char *extensions  = (const char *)glGetString(GL_EXTENSIONS);
     const char *shadingLang = (const char *)glGetString(GL_SHADING_LANGUAGE_VERSION);
-
-	if (renderer && strstr(renderer, "Adreno") != nullptr) {
-		isAdreno = true;
-	} else if (vendor && strstr(vendor, "Qualcomm") != nullptr) {
-		isAdreno = true;
-	}
 	
     fprintf(log, "== OpenGL ES Info ==\n");
     fprintf(log, "GL_VERSION: %s\n", version     ? version     : "N/A");
@@ -1846,7 +1829,7 @@ initOpenGL(void)
 	glGetIntegerv(GL_NUM_EXTENSIONS, &numExt);
 	for(int i = 0; i < numExt; i++){
 		const char *ext = (const char*)glGetStringi(GL_EXTENSIONS, i);
-		if(ext == nil)
+		ifGL_TEXTURE_2D(ext == nil)
 			continue;	// apparently that can happen...
 		if(strcmp(ext, "GL_EXT_texture_compression_s3tc") == 0)
 			gl3Caps.dxtSupported = true;
